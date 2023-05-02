@@ -176,6 +176,10 @@ function animateHandsForward() {
 }
 animate();
 
+// ******************
+// Testing Animations
+// ******************
+
 // Set up jump animation parameters
 const jumpHeight = 2;
 const jumpDuration = 1;
@@ -215,3 +219,70 @@ function startJump() {
 
 // Call startJump function to begin animation
 startJump();
+
+// ***************
+// Testing Shaders
+// ***************
+
+// Define the frog skin vertex shader
+const frogSkinVertexShader = `
+  varying vec2 vUv;
+  varying vec3 vPosition;
+
+  void main() {
+    vUv = uv;
+    vPosition = position;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// Define the frog skin fragment shader
+const frogSkinFragmentShader = `
+  uniform float time;
+  uniform float speed;
+  uniform float frequency;
+  uniform float amplitude;
+
+  varying vec2 vUv;
+  varying vec3 vPosition;
+
+  void main() {
+    vec3 color = vec3(0.0);
+
+    float displacement = amplitude * sin(frequency * vPosition.y + time * speed);
+    float alpha = mix(0.8, 1.0, smoothstep(-0.2, 0.2, displacement));
+
+    color.r = mix(0.6, 0.3, smoothstep(-0.3, 0.3, displacement));
+    color.g = mix(0.9, 0.7, smoothstep(-0.2, 0.4, displacement));
+    color.b = mix(0.5, 0.2, smoothstep(-0.1, 0.5, displacement));
+
+    gl_FragColor = vec4(color, alpha);
+  }
+`;
+
+// Create the frog skin material
+const frogSkinMaterial = new THREE.ShaderMaterial({
+  vertexShader: frogSkinVertexShader,
+  fragmentShader: frogSkinFragmentShader,
+  uniforms: {
+    time: { value: 0.0 },
+    speed: { value: 2.0 },
+    frequency: { value: 2.0 },
+    amplitude: { value: 0.2 },
+  },
+});
+
+// Create the frog mesh
+// const frogGeometry = new THREE.BoxGeometry(1, 1, 1);
+// const frogMesh = new THREE.Mesh(frogGeometry, frogSkinMaterial);
+
+// Add the frog mesh to the scene
+scene.add(frogMesh);
+
+// Animate the frog skin shader
+function animate2() {
+  requestAnimationFrame(animate);
+  frogSkinMaterial.uniforms.time.value += 0.1;
+}
+
+animate2();
