@@ -15,7 +15,7 @@ let frogModel = null;
 //Loading Model
 loader.load(
 	// resource URL
-	'RiggedFrog.glb',
+	'frog.glb',
 	// called when the resource is loaded
 	function ( gltf ) {
 
