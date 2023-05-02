@@ -3,6 +3,7 @@ import {GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 //3JS BOILER PLATE
 const DEFAULT_TRANSLATE = 0.2;
 const ROTATION_RADS = 0.0175;
+const NINTY_ROTATION = 1.5708;
 const canvas = document.querySelector("#glcanvas");
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -12,6 +13,8 @@ scene.add(camera)
 const renderer = new THREE.WebGLRenderer({canvas : canvas});
 renderer.setSize( window.innerWidth * (90/100), window.innerHeight  * (90/100));
 let frogModel = null;
+const axesHelper = new THREE.AxesHelper( 5 );
+scene.add( axesHelper );
 let bonesArray = [];
 //Loading Model
 loader.load(
@@ -56,7 +59,7 @@ loader.load(
   //40 -- left hand mid
   //41 -- left hand wrist
   //42 -43, 44-45, 45-46 are all finger combos on left hand
-  //47?
+
 	// called while loading is progressing
 	function ( xhr ) {
 
@@ -126,6 +129,13 @@ function handleKeyPress(event) {
        }else{
         frogModel.translateX(DEFAULT_TRANSLATE);
        }
+    }else if(event.key == 'a'){
+      console.log("A pressed, rotating model");
+      frogModel.rotateY(-NINTY_ROTATION);
+    }else if(event.key == 'd'){
+      frogModel.rotateY(+NINTY_ROTATION);
+    }else if(event.key == 'w'){
+      animateHandsForward();
     }
     }
     
@@ -149,4 +159,17 @@ function rotateBoneAtIndex(i){
   bonesArray[i].rotateX(90);
 }
 
+function animateHandsForward(){
+  if(frogModel){
+    // bonesArray[32].rotateZ(-1.45);
+    // bonesArray[41].rotateZ(-1.45);
+    // bonesArray[31].translateX(0.05);
+    // bonesArray[40].translateX(-0.05);
+    bonesArray[30].rotateZ(-1.45);
+    bonesArray[39].rotateZ(-1.45);
+  } 
+  console.log(bonesArray[30].quaternion);
+  console.log(bonesArray[39].quaternion);
+  
+}
 animate();
