@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WebGL Demo</title>
+  </head>
+  <body>
+    <canvas id="glcanvas" width="640" height="480"></canvas>
+  </body>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./three.js-master/build/three.module.js",
+        "three/addons/": "./three.js-master/examples/jsm/",
+        "models/": "../RiggedFrog.glb"
+      }
+    }
+  </script>
+  <script src="webgl-demo.js" type="module"></script>
+</html>
