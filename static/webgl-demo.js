@@ -12,12 +12,13 @@ scene.add(camera)
 const renderer = new THREE.WebGLRenderer({canvas : canvas});
 renderer.setSize( window.innerWidth * (90/100), window.innerHeight  * (90/100));
 let frogModel = null;
+let bonesArray = [];
 //Loading Model
 loader.load(
 	// resource URL
 	'frog.glb',
 	// called when the resource is loaded
-	function ( gltf ) {
+	async function ( gltf ) {
 
 		scene.add( gltf.scene );
 
@@ -27,8 +28,35 @@ loader.load(
 		gltf.cameras; // Array<THREE.Camera>
 		gltf.asset; // Object
     frogModel = gltf.scene;
-    console.log(gltf.scene);
+    listBones(gltf.scene);
 	},
+  //0 - 4 useless --> 5,6,7,8 are back bones?
+  //5 -- nose
+  //6 -- middle of face
+  //7 - back bone between arms 
+  //8 - second last back bone
+  //8
+  //9 --> similar to 19 but right
+  //10 - right leg thigh
+  //11 - right leg knee
+  //12 - right leg second fold (second knee)
+  //13-14,15-16, 17-18  - Fingers of right foot
+  //19  ?? --> similar to 9 but left
+  //20 - left thigh
+  //21 - left knee
+  //22 - left knee 2
+  //23 - left ankle
+  //24-25, 25-26, 27-28 - fingers on left foot
+  //29 -- back between both hands
+  //30 -- right hand back
+  //31 -- right hand mid
+  //32 -- right hand wrist 
+  //33 -- 34 , 35-36, 37-38 all finger combos on right hand
+  //39 -- left hand back
+  //40 -- left hand mid
+  //41 -- left hand wrist
+  //42 -43, 44-45, 45-46 are all finger combos on left hand
+  //47?
 	// called while loading is progressing
 	function ( xhr ) {
 
@@ -109,4 +137,16 @@ function handleKeyRelease(event){
   delete keysPressed[event.key];
 }
 
-animate()
+function listBones(child){
+  bonesArray.push(child);
+  for(let i = 0 ; i < child.children.length; i++){
+    listBones(child.children[i]);
+  }
+}
+
+function rotateBoneAtIndex(i){
+  console.log(i);
+  bonesArray[i].rotateX(90);
+}
+
+animate();
