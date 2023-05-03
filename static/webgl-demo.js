@@ -3,6 +3,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 //3JS BOILER PLATE
+const clock = new THREE.Clock();
+let deltaTime;
 const DEFAULT_TRANSLATE = 0.2;
 const ROTATION_RADS = 0.0175;
 const NINTY_ROTATION = 1.5708;
@@ -14,7 +16,6 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-
 const loader = new GLTFLoader();
 camera.position.set(0, 0.5, 5);
 scene.add(camera);
@@ -29,7 +30,10 @@ scene.add(axesHelper);
 let bonesArray = [];
 
 //Animation related
-
+let armsExtended = false;
+let originalRotations;
+let legsExtended = false;
+let originalRotationsLegs;
 //Loading Model
 loader.load(
   // "frog.glb",
@@ -96,10 +100,9 @@ scene.add(light);
 
 let keysPressed = {};
 document.onkeydown = handleKeyPress;
-const jumpDuration = 0.5;
-const jumpHeight = 1;
+const jumpDuration = 1;
+const jumpHeight = 1.5;
 function handleKeyPress(event) {
-  console.log(event);
   event = event || window.event;
   keysPressed[event.key] = true;
   if (frogModel) {
@@ -128,39 +131,58 @@ function handleKeyPress(event) {
         frogModel.translateX(DEFAULT_TRANSLATE);
       }
     } else if (event.key == "a") {
-      console.log("A pressed, rotating model");
       frogModel.rotateY(-NINTY_ROTATION);
     } else if (event.key == "d") {
       frogModel.rotateY(+NINTY_ROTATION);
-    } else if (event.key == "w") {
-      const shoulderAxis = new THREE.Vector3().subVectors(bonesArray[30].position, bonesArray[39].position).normalize();
-      const axis = new THREE.Vector3().subVectors(bonesArray[31].position, bonesArray[40].position).normalize();
-      bonesArray[31].rotateOnWorldAxis(axis, -1.5);
-      bonesArray[40].rotateOnWorldAxis(axis, 1.5);
-      bonesArray[30].rotateOnAxis(axis, 1.5);
-      bonesArray[39].rotateOnAxis(axis, -1);
 
+      // [EXTEND ARMS]
+    } else if (event.key == "w") {
+      // const axis = new THREE.Vector3().subVectors(bonesArray[31].position, bonesArray[40].position).normalize();
+      // bonesArray[31].rotateOnWorldAxis(axis, -1.5);
+      // bonesArray[40].rotateOnWorldAxis(axis, 1.5);
+      // bonesArray[30].rotateOnAxis(axis, 1.5);
+      // bonesArray[39].rotateOnAxis(axis, -1);
+      if(armsExtended){
+       retractArms();
+      }else{
+        extendArms();
+      }
+  
+      // [EXTEND FEET]
     } else if (event.key == "s") {
-      const axisThighs = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
-      const axisKnees = new THREE.Vector3().subVectors(bonesArray[12].position, bonesArray[22].position).normalize();
-      bonesArray[10].rotateOnWorldAxis(axisThighs, 2);
-      bonesArray[20].rotateOnWorldAxis(axisThighs, -2);
-      bonesArray[11].rotateOnWorldAxis(axisThighs,-1);
-      bonesArray[21].rotateOnWorldAxis(axisThighs,1);
+      // const axisThighs = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
+      // bonesArray[10].rotateOnWorldAxis(axisThighs, 2);
+      // bonesArray[20].rotateOnWorldAxis(axisThighs, -2);
+      // bonesArray[11].rotateOnWorldAxis(axisThighs,-1);
+      // bonesArray[21].rotateOnWorldAxis(axisThighs,1);
+      if(legsExtended){
+       retractLegs();
+      }else{
+        extendLegs();
+      }
+
+      // [JUMP]
       }else if (event.key === "j") {
-      // Calculate the forward direction of the frog based on its rotation
+
       const forward = new THREE.Vector3(0, 0, 1);
       forward.applyQuaternion(frogModel.quaternion);
 
       // Animate the jump by moving the frog along the jump path using the lerp function
       const startPosition = frogModel.position.clone();
-      const endPosition = startPosition.clone().add(forward);
+      const endPosition = startPosition.clone().add(forward).add(forward);
 
       const initialLeftLegRotation = bonesArray[10].rotation.clone();
       const initialRightLegRotation = bonesArray[20].rotation.clone();
       const initialLeftArmRotation = bonesArray[30].rotation.clone();
       const initialRightArmRotation = bonesArray[39].rotation.clone();
-
+      if(armsExtended){
+        retractArms();
+      }
+      if(legsExtended){
+        retractLegs();
+      }
+      extendArms();
+      extendLegs();
       let time = 0;
       const animateJump = () => {
         time += 0.01;
@@ -173,70 +195,11 @@ function handleKeyPress(event) {
         const y = jumpHeight * Math.sin((Math.PI * time) / jumpDuration);
         position.setY(position.y + y);
         frogModel.position.copy(position);
-        const oppositeDirection = forward.clone().multiplyScalar(-1);
-        // const armRotationAmount = Math.PI / 2 * Math.sin(Math.PI * time / jumpDuration);
-        const legAngle =
-          (Math.PI / 4) * Math.sin((Math.PI * time) / jumpDuration);
-        // let LeftLegrotationQuaternion = new THREE.Quaternion().setFromEuler(bonesArray[10].rotation);
-        // LeftLegrotationQuaternion.setFromAxisAngle(rotationAxis, legAngle);
-        // let RightLegrotationQuaternion = new THREE.Quaternion().setFromEuler(bonesArray[20].rotation);
-        // RightLegrotationQuaternion.setFromAxisAngle(rotationAxis, legAngle);
-        // let LeftArmrotationQuaternion = new THREE.Quaternion().setFromEuler(bonesArray[31].rotation);
-        // LeftArmrotationQuaternion.setFromAxisAngle(rotationAxis, legAngle);
-        // let RightArmrotationQuaternion = new THREE.Quaternion().setFromEuler(bonesArray[40].rotation);
-        // RightArmrotationQuaternion.setFromAxisAngle(rotationAxis, legAngle);
-        // bonesArray[10].rotation.setFromQuaternion(LeftLegrotationQuaternion);
-        // bonesArray[20].rotation.setFromQuaternion(RightLegrotationQuaternion);
-        // bonesArray[31].rotation.setFromQuaternion(LeftArmrotationQuaternion);
-        // bonesArray[40].rotation.setFromQuaternion(RightArmrotationQuaternion);
-
-        const rotationAxisLeftArm = new THREE.Vector3()
-          .crossVectors(oppositeDirection, new THREE.Vector3(1, 0, 0))
-          .normalize();
-        const rotationAxisRightArm = new THREE.Vector3()
-          .crossVectors(oppositeDirection, new THREE.Vector3(1, 0, 1))
-          .normalize();
-        const rotationAxisLeftLeg = new THREE.Vector3()
-          .crossVectors(oppositeDirection, new THREE.Vector3(1, 0, 1))
-          .normalize();
-        const rotationAxisRightLeg = new THREE.Vector3()
-          .crossVectors(oppositeDirection, new THREE.Vector3(1, 0, 1))
-          .normalize();
-        rotateBone(
-          bonesArray[10],
-          oppositeDirection,
-          2 * legAngle,
-          initialLeftLegRotation,
-          rotationAxisLeftLeg
-        );
-        rotateBone(
-          bonesArray[20],
-          oppositeDirection,
-          2 * legAngle,
-          initialRightLegRotation,
-          rotationAxisRightLeg
-        );
-        rotateBone(
-          bonesArray[30],
-          oppositeDirection,
-          legAngle,
-          initialLeftArmRotation,
-          rotationAxisLeftArm
-        );
-        rotateBone(
-          bonesArray[39],
-          oppositeDirection,
-          legAngle,
-          initialRightArmRotation,
-          rotationAxisRightArm
-        );
         if (time < jumpDuration) {
           requestAnimationFrame(animateJump);
         } else {
-          bonesArray[10].rotation.copy(initialLeftLegRotation);
-          bonesArray[20].rotation.copy(initialRightLegRotation);
-          bonesArray[30].rotation.copy(initialLeftArmRotation);
-          bonesArray[39].rotation.copy(initialRightArmRotation);
+          retractArms();
+          retractLegs();
         }
       };
       animateJump();
@@ -267,6 +230,7 @@ function rotateBone(bone, oppositeDirection, angle, startAngle, rotationAxis) {
   bone.rotation.setFromQuaternion(rotationOffset);
 }
 
+
 function rotateBoneAtIndex(i) {
   console.log(i);
   bonesArray[i].rotateX(90);
@@ -275,60 +239,93 @@ function rotateBoneAtIndex(i) {
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
+  deltaTime = clock.getDelta();
 }
 
 animate();
 
-function animateExtendArms() {
-  // Calculate the forward direction of the frog based on its rotation
-  const forward = new THREE.Vector3(0, 0, 1);
-  forward.applyQuaternion(frogModel.quaternion);
+function extendArms(){
+  originalRotations = [
+    bonesArray[31].quaternion.clone(),
+    bonesArray[40].quaternion.clone(),
+    bonesArray[30].quaternion.clone(),
+    bonesArray[39].quaternion.clone()
+  ];
+  
+  let time = 0;
+  const duration = 1; // Animation duration in seconds
+  const axis = new THREE.Vector3().subVectors(bonesArray[31].position, bonesArray[40].position).normalize();
+  const speed = 2.10; // Rotation speed in radians per second
 
-  // Extend the arms by rotating the arm bones around the axis perpendicular to the forward direction and the up direction of the arm
-  const extendDuration = 5;
-  const extendAngle = Math.PI / 2;
-  const arms = [bonesArray[30], bonesArray[39]];
-  const armAxes = [new THREE.Vector3(), new THREE.Vector3()];
-  for (let i = 0; i < 2; i++) {
-    const arm = arms[i];
-    const up = new THREE.Vector3(0, 1, 0);
-    up.applyQuaternion(arm.quaternion);
-    const axis = new THREE.Vector3().subVectors(arms[0].position, arms[1].position);
-    armAxes[i].copy(axis);
-    const startQuaternion = arm.quaternion.clone();
-    const endQuaternion = new THREE.Quaternion()
-      .setFromAxisAngle(axis, extendAngle)
-      .multiply(startQuaternion);
-    let time = 0;
-    const extendArm = () => {
-      time += 0.01;
-      if (time > extendDuration) time = extendDuration;
-      const t = time / extendDuration;
-      arm.quaternion.copy(startQuaternion).slerp(endQuaternion, t);
-      if (time < extendDuration) {
-        requestAnimationFrame(extendArm);
-      } else {
-        retractArm(arm, armAxes[i], startQuaternion);
-      }
-    };
-    extendArm();
+  function updateBones() {
+    time += deltaTime;
+
+    const progress = Math.min(time / duration, 1); // Clamp progress to 1 after the duration is reached
+
+    // Update bone rotations based on progress
+    bonesArray[31].rotateOnWorldAxis(axis, -speed * deltaTime);
+    bonesArray[40].rotateOnWorldAxis(axis, speed * deltaTime);
+    bonesArray[30].rotateOnAxis(axis, speed * deltaTime);
+    bonesArray[39].rotateOnAxis(axis, -speed * deltaTime);
+
+    if (progress < 1) {
+      // If the animation is not complete, request the next frame
+      requestAnimationFrame(updateBones);
+    }
   }
+  // Start the animation
+  requestAnimationFrame(updateBones);
+  armsExtended = true;
 }
 
-function retractArm(arm, axis, startQuaternion) {
-  const retractDuration = 0.2;
-  const endQuaternion = startQuaternion.clone();
+function extendLegs(){
+  originalRotationsLegs = [
+    bonesArray[10].quaternion.clone(),
+    bonesArray[20].quaternion.clone(),
+    bonesArray[11].quaternion.clone(),
+    bonesArray[21].quaternion.clone()
+  ];
+  
   let time = 0;
-  const retractArm = () => {
-    time += 0.01;
-    if (time > retractDuration) time = retractDuration;
-    const t = time / retractDuration;
-    arm.quaternion.copy(startQuaternion).slerp(endQuaternion, t);
-    if (time < retractDuration) {
-      requestAnimationFrame(retractArm);
+  const duration = 1; // Animation duration in seconds
+  const axis = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
+  const speed = 1; // Rotation speed in radians per second
+
+  function updateBones() {
+    time += deltaTime;
+
+    const progress = Math.min(time / duration, 1); // Clamp progress to 1 after the duration is reached
+
+    // Update bone rotations based on progress
+    bonesArray[10].rotateOnWorldAxis(axis,  2 * speed * deltaTime);
+    bonesArray[20].rotateOnWorldAxis(axis, - 2 * speed * deltaTime);
+    bonesArray[11].rotateOnWorldAxis(axis, -speed * deltaTime);
+    bonesArray[21].rotateOnWorldAxis(axis, speed * deltaTime);
+
+    if (progress < 1) {
+      // If the animation is not complete, request the next frame
+      requestAnimationFrame(updateBones);
     }
-  };
-  retractArm();
+  }
+  // Start the animation
+  requestAnimationFrame(updateBones);
+  legsExtended = true;
+}
+
+function retractArms(){
+  bonesArray[31].quaternion.copy(originalRotations[0]);
+  bonesArray[40].quaternion.copy(originalRotations[1]);
+  bonesArray[30].quaternion.copy(originalRotations[2]);
+  bonesArray[39].quaternion.copy(originalRotations[3]);
+  armsExtended = false;
+}
+
+function retractLegs(){
+  bonesArray[10].quaternion.copy(originalRotationsLegs[0]);
+  bonesArray[20].quaternion.copy(originalRotationsLegs[1]);
+  bonesArray[11].quaternion.copy(originalRotationsLegs[2]);
+  bonesArray[21].quaternion.copy(originalRotationsLegs[3]);
+  legsExtended = false;
 }
 
 // ***************
@@ -395,3 +392,4 @@ const frogSkinFragmentShader = `
 //   requestAnimationFrame(animate);
 //   frogSkinMaterial.uniforms.time.value += 0.1;
 // }
+
