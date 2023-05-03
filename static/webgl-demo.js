@@ -10,6 +10,7 @@ const ROTATION_RADS = 0.0175;
 const NINTY_ROTATION = 1.5708;
 const canvas = document.querySelector("#glcanvas");
 const scene = new THREE.Scene();
+// scene.background = new THREE.Color("ffffff");
 
 // const camera = new THREE.PerspectiveCamera(
 //   75,
@@ -53,12 +54,13 @@ let originalRotations;
 let legsExtended = false;
 let originalRotationsLegs;
 let armsExtendedSwim = false;
-let isSwimming= false;
+let isSwimming = false;
 
 //Loading Model
 loader.load(
-  // "frog.glb",
-  "Frog(FragmentShader).glb",
+  // "FinalFrog.glb",
+  "untitled.glb",
+  // "Frog(FragmentShader).glb",
   // "frog.gltf",
   // called when the resource is loaded
   async function (gltf) {
@@ -224,12 +226,12 @@ function handleKeyPress(event) {
         }
       };
       animateJump();
-    }else if(event.key == "k"){
-      if(isSwimming){
+    } else if (event.key == "k") {
+      if (isSwimming) {
         isSwimming = false;
         retractArms();
         retractLegs();
-      }else{
+      } else {
         extendArmsToSwim();
         loopLegsForSwim();
         isSwimming = true;
@@ -363,19 +365,20 @@ function retractLegs() {
   legsExtended = false;
 }
 
-
-function extendArmsToSwim(){
+function extendArmsToSwim() {
   originalRotations = [
     bonesArray[31].quaternion.clone(),
     bonesArray[40].quaternion.clone(),
     bonesArray[30].quaternion.clone(),
-    bonesArray[39].quaternion.clone()
+    bonesArray[39].quaternion.clone(),
   ];
-  
+
   let time = 0;
   const duration = 1; // Animation duration in seconds
-  const axis = new THREE.Vector3().subVectors(bonesArray[31].position, bonesArray[40].position).normalize();
-  const speed = 2.10; // Rotation speed in radians per second
+  const axis = new THREE.Vector3()
+    .subVectors(bonesArray[31].position, bonesArray[40].position)
+    .normalize();
+  const speed = 2.1; // Rotation speed in radians per second
 
   function updateBones() {
     time += deltaTime;
@@ -383,17 +386,17 @@ function extendArmsToSwim(){
     const progress = Math.min(time / duration, 1); // Clamp progress to 1 after the duration is reached
 
     // Update bone rotations based on progress
-    bonesArray[30].rotateX(-speed*deltaTime);
-    bonesArray[39].rotateX(speed*deltaTime);
+    bonesArray[30].rotateX(-speed * deltaTime);
+    bonesArray[39].rotateX(speed * deltaTime);
 
     if (progress < 1) {
       // If the animation is not complete, request the next frame
       requestAnimationFrame(updateBones);
-    }else{
-      if(isSwimming){
-        retractArms()
-        extendArmsToSwim()
-      }else{
+    } else {
+      if (isSwimming) {
+        retractArms();
+        extendArmsToSwim();
+      } else {
         retractArms();
       }
     }
@@ -403,17 +406,19 @@ function extendArmsToSwim(){
   armsExtended = true;
 }
 
-function loopLegsForSwim(){
+function loopLegsForSwim() {
   originalRotationsLegs = [
     bonesArray[10].quaternion.clone(),
     bonesArray[20].quaternion.clone(),
     bonesArray[11].quaternion.clone(),
-    bonesArray[21].quaternion.clone()
+    bonesArray[21].quaternion.clone(),
   ];
-  
+
   let time = 0;
   const duration = 1; // Animation duration in seconds
-  const axis = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
+  const axis = new THREE.Vector3()
+    .subVectors(bonesArray[10].position, bonesArray[20].position)
+    .normalize();
   const speed = 1; // Rotation speed in radians per second
 
   function updateBones() {
@@ -422,19 +427,19 @@ function loopLegsForSwim(){
     const progress = Math.min(time / duration, 1); // Clamp progress to 1 after the duration is reached
 
     // Update bone rotations based on progress
-    bonesArray[10].rotateOnWorldAxis(axis,  2 * speed * deltaTime);
-    bonesArray[20].rotateOnWorldAxis(axis, - 2 * speed * deltaTime);
+    bonesArray[10].rotateOnWorldAxis(axis, 2 * speed * deltaTime);
+    bonesArray[20].rotateOnWorldAxis(axis, -2 * speed * deltaTime);
     bonesArray[11].rotateOnWorldAxis(axis, -speed * deltaTime);
     bonesArray[21].rotateOnWorldAxis(axis, speed * deltaTime);
 
     if (progress < 1) {
       // If the animation is not complete, request the next frame
       requestAnimationFrame(updateBones);
-    }else{
-      if(isSwimming){
-        retractLegs()
-        loopLegsForSwim()
-      }else{
+    } else {
+      if (isSwimming) {
+        retractLegs();
+        loopLegsForSwim();
+      } else {
         retractLegs();
       }
     }
