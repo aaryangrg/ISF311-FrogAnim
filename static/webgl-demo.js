@@ -10,22 +10,40 @@ const ROTATION_RADS = 0.0175;
 const NINTY_ROTATION = 1.5708;
 const canvas = document.querySelector("#glcanvas");
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
+
+// const camera = new THREE.PerspectiveCamera(
+//   75,
+//   window.innerWidth / window.innerHeight,
+//   0.1,
+//   1000
+// );
+
+// camera.position.set(0, 0.5, 5);
+
 const loader = new GLTFLoader();
-camera.position.set(0, 0.5, 5);
-scene.add(camera);
+// scene.add(camera);
+
 const renderer = new THREE.WebGLRenderer({ canvas: canvas });
 renderer.setSize(
   window.innerWidth * (99 / 100),
   window.innerHeight * (97.5 / 100)
 );
+document.body.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(
+  45,
+  window.innerWidth / window.innerHeight,
+  1,
+  10000
+);
+const controls = new OrbitControls(camera, renderer.domElement);
+
+camera.position.set(0, 1, 10);
+
+controls.update();
+
 let frogModel = null;
-const axesHelper = new THREE.AxesHelper(5);
+const axesHelper = new THREE.AxesHelper(10);
 scene.add(axesHelper);
 let bonesArray = [];
 
@@ -40,7 +58,8 @@ let isSwimming= false;
 //Loading Model
 loader.load(
   // "frog.glb",
-  "frog.gltf",
+  "Frog(FragmentShader).glb",
+  // "frog.gltf",
   // called when the resource is loaded
   async function (gltf) {
     scene.add(gltf.scene);
@@ -145,12 +164,12 @@ function handleKeyPress(event) {
       // bonesArray[40].rotateOnWorldAxis(axis, 1.5);
       // bonesArray[30].rotateOnAxis(axis, 1.5);
       // bonesArray[39].rotateOnAxis(axis, -1);
-      if(armsExtended){
-       retractArms();
-      }else{
+      if (armsExtended) {
+        retractArms();
+      } else {
         extendArms();
       }
-  
+
       // [EXTEND FEET]
     } else if (event.key == "s") {
       // const axisThighs = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
@@ -158,15 +177,14 @@ function handleKeyPress(event) {
       // bonesArray[20].rotateOnWorldAxis(axisThighs, -2);
       // bonesArray[11].rotateOnWorldAxis(axisThighs,-1);
       // bonesArray[21].rotateOnWorldAxis(axisThighs,1);
-      if(legsExtended){
-       retractLegs();
-      }else{
+      if (legsExtended) {
+        retractLegs();
+      } else {
         extendLegs();
       }
 
       // [JUMP]
-      }else if (event.key === "j") {
-
+    } else if (event.key === "j") {
       const forward = new THREE.Vector3(0, 0, 1);
       forward.applyQuaternion(frogModel.quaternion);
 
@@ -178,10 +196,10 @@ function handleKeyPress(event) {
       const initialRightLegRotation = bonesArray[20].rotation.clone();
       const initialLeftArmRotation = bonesArray[30].rotation.clone();
       const initialRightArmRotation = bonesArray[39].rotation.clone();
-      if(armsExtended){
+      if (armsExtended) {
         retractArms();
       }
-      if(legsExtended){
+      if (legsExtended) {
         retractLegs();
       }
       extendArms();
@@ -243,7 +261,6 @@ function rotateBone(bone, oppositeDirection, angle, startAngle, rotationAxis) {
   bone.rotation.setFromQuaternion(rotationOffset);
 }
 
-
 function rotateBoneAtIndex(i) {
   console.log(i);
   bonesArray[i].rotateX(90);
@@ -251,24 +268,27 @@ function rotateBoneAtIndex(i) {
 
 function animate() {
   requestAnimationFrame(animate);
+  controls.update();
   renderer.render(scene, camera);
   deltaTime = clock.getDelta();
 }
 
 animate();
 
-function extendArms(){
+function extendArms() {
   originalRotations = [
     bonesArray[31].quaternion.clone(),
     bonesArray[40].quaternion.clone(),
     bonesArray[30].quaternion.clone(),
-    bonesArray[39].quaternion.clone()
+    bonesArray[39].quaternion.clone(),
   ];
-  
+
   let time = 0;
   const duration = 1; // Animation duration in seconds
-  const axis = new THREE.Vector3().subVectors(bonesArray[31].position, bonesArray[40].position).normalize();
-  const speed = 2.10; // Rotation speed in radians per second
+  const axis = new THREE.Vector3()
+    .subVectors(bonesArray[31].position, bonesArray[40].position)
+    .normalize();
+  const speed = 2.1; // Rotation speed in radians per second
 
   function updateBones() {
     time += deltaTime;
@@ -291,17 +311,19 @@ function extendArms(){
   armsExtended = true;
 }
 
-function extendLegs(){
+function extendLegs() {
   originalRotationsLegs = [
     bonesArray[10].quaternion.clone(),
     bonesArray[20].quaternion.clone(),
     bonesArray[11].quaternion.clone(),
-    bonesArray[21].quaternion.clone()
+    bonesArray[21].quaternion.clone(),
   ];
-  
+
   let time = 0;
   const duration = 1; // Animation duration in seconds
-  const axis = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
+  const axis = new THREE.Vector3()
+    .subVectors(bonesArray[10].position, bonesArray[20].position)
+    .normalize();
   const speed = 1; // Rotation speed in radians per second
 
   function updateBones() {
@@ -310,8 +332,8 @@ function extendLegs(){
     const progress = Math.min(time / duration, 1); // Clamp progress to 1 after the duration is reached
 
     // Update bone rotations based on progress
-    bonesArray[10].rotateOnWorldAxis(axis,  2 * speed * deltaTime);
-    bonesArray[20].rotateOnWorldAxis(axis, - 2 * speed * deltaTime);
+    bonesArray[10].rotateOnWorldAxis(axis, 2 * speed * deltaTime);
+    bonesArray[20].rotateOnWorldAxis(axis, -2 * speed * deltaTime);
     bonesArray[11].rotateOnWorldAxis(axis, -speed * deltaTime);
     bonesArray[21].rotateOnWorldAxis(axis, speed * deltaTime);
 
@@ -325,7 +347,7 @@ function extendLegs(){
   legsExtended = true;
 }
 
-function retractArms(){
+function retractArms() {
   bonesArray[31].quaternion.copy(originalRotations[0]);
   bonesArray[40].quaternion.copy(originalRotations[1]);
   bonesArray[30].quaternion.copy(originalRotations[2]);
@@ -333,7 +355,7 @@ function retractArms(){
   armsExtended = false;
 }
 
-function retractLegs(){
+function retractLegs() {
   bonesArray[10].quaternion.copy(originalRotationsLegs[0]);
   bonesArray[20].quaternion.copy(originalRotationsLegs[1]);
   bonesArray[11].quaternion.copy(originalRotationsLegs[2]);
@@ -485,4 +507,3 @@ const frogSkinFragmentShader = `
 //   requestAnimationFrame(animate);
 //   frogSkinMaterial.uniforms.time.value += 0.1;
 // }
-
