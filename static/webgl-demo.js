@@ -94,7 +94,8 @@ scene.add(light);
 
 let keysPressed = {};
 document.onkeydown = handleKeyPress;
-
+const jumpDuration = 0.5
+const jumpHeight = 1
 function handleKeyPress(event) {
   console.log(event);
   event = event || window.event;
@@ -130,7 +131,7 @@ function handleKeyPress(event) {
     } else if (event.key == "d") {
       frogModel.rotateY(+NINTY_ROTATION);
     } else if (event.key == "w") {
-      animateHandsForward();
+      animateExtendArms();
     } else if (event.key === 'j') {
       // Calculate the forward direction of the frog based on its rotation
       const forward = new THREE.Vector3(0, 0, 1);
@@ -225,49 +226,56 @@ function animate() {
 
 animate();
 
-// ******************
-// Testing Animations
-// ******************
 
-// Set up jump animation parameters
-const jumpHeight = 1;
-const jumpDuration = 1;
-let jumpStartTime = null;
+function animateExtendArms() {
+  // Calculate the forward direction of the frog based on its rotation
+  const forward = new THREE.Vector3(0, 0, 1);
+  forward.applyQuaternion(frogModel.quaternion);
 
-// Define jump animation function
-// function animateJump() {
-//   const time = (Date.now() - jumpStartTime) / jumpDuration;
-//   const position = frogModel.position;
+  // Extend the arms by rotating the arm bones around the axis perpendicular to the forward direction and the up direction of the arm
+  const extendDuration = 0.2;
+  const extendAngle = Math.PI / 6;
+  const arms = [bonesArray[30], bonesArray[39]];
+  const armAxes = [new THREE.Vector3(), new THREE.Vector3()];
+  for (let i = 0; i < 2; i++) {
+    const arm = arms[i];
+    const up = new THREE.Vector3(0, 1, 0);
+    up.applyQuaternion(arm.quaternion);
+    const axis = new THREE.Vector3().crossVectors(forward, up).normalize();
+    armAxes[i].copy(axis);
+    const startQuaternion = arm.quaternion.clone();
+    const endQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, extendAngle).multiply(startQuaternion);
+    let time = 0;
+    const extendArm = () => {
+      time += 0.01;
+      if (time > extendDuration) time = extendDuration;
+      const t = time / extendDuration;
+      arm.quaternion.copy(startQuaternion).slerp(endQuaternion, t);
+      if (time < extendDuration) {
+        requestAnimationFrame(extendArm);
+      } else {
+        retractArm(arm, armAxes[i], startQuaternion);
+      }
+    };
+    extendArm();
+  }
+}
 
-//   // Use sin-cos functions to calculate position of frog skeleton
-//   position.x = Math.sin(time * Math.PI) * 2;
-//   position.y = Math.cos(time * Math.PI) * jumpHeight;
-
-//   // Use .lerp Vector3 command to smoothly transition to new position
-//   frogModel.position.lerp(position, 0.5);
-
-//   // Control the legs and hands
-//   const legAngle = time * Math.PI;
-//   const footAngle = time * Math.PI * 2;
-
-//   bonesArray[12].rotation.x = (Math.sin(legAngle) * Math.PI) / 4;
-//   bonesArray[30].rotation.x = (Math.sin(footAngle) * Math.PI) / 4;
-//   bonesArray[22].rotation.x = (Math.sin(legAngle + Math.PI) * Math.PI) / 4;
-//   bonesArray[39].rotation.x = (Math.sin(footAngle + Math.PI) * Math.PI) / 4;
-
-//   if (time < 1) {
-//     requestAnimationFrame(animateJump);
-//   }
-// }
-
-// // Define function to start jump animation
-// function startJump() {
-//   jumpStartTime = Date.now();
-//   requestAnimationFrame(animateJump);
-// }
-
-// Call startJump function to begin animation
-// startJump();
+function retractArm(arm, axis, startQuaternion) {
+  const retractDuration = 0.2;
+  const endQuaternion = startQuaternion.clone();
+  let time = 0;
+  const retractArm = () => {
+    time += 0.01;
+    if (time > retractDuration) time = retractDuration;
+    const t = time / retractDuration;
+    arm.quaternion.copy(startQuaternion).slerp(endQuaternion, t);
+    if (time < retractDuration) {
+      requestAnimationFrame(retractArm);
+    }
+  };
+  retractArm();
+}
 
 // ***************
 // Testing Shaders
