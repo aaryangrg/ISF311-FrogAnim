@@ -58,10 +58,7 @@ let isSwimming = false;
 
 //Loading Model
 loader.load(
-  // "FinalFrog.glb",
-  "untitled.glb",
-  // "Frog(FragmentShader).glb",
-  // "frog.gltf",
+  "FinalFrog.glb",
   // called when the resource is loaded
   async function (gltf) {
     scene.add(gltf.scene);
