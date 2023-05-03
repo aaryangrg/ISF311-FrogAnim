@@ -34,6 +34,9 @@ let armsExtended = false;
 let originalRotations;
 let legsExtended = false;
 let originalRotationsLegs;
+let armsExtendedSwim = false;
+let isSwimming= false;
+
 //Loading Model
 loader.load(
   // "frog.glb",
@@ -203,6 +206,16 @@ function handleKeyPress(event) {
         }
       };
       animateJump();
+    }else if(event.key == "k"){
+      if(isSwimming){
+        isSwimming = false;
+        retractArms();
+        retractLegs();
+      }else{
+        extendArmsToSwim();
+        loopLegsForSwim();
+        isSwimming = true;
+      }
     }
   }
 }
@@ -326,6 +339,86 @@ function retractLegs(){
   bonesArray[11].quaternion.copy(originalRotationsLegs[2]);
   bonesArray[21].quaternion.copy(originalRotationsLegs[3]);
   legsExtended = false;
+}
+
+
+function extendArmsToSwim(){
+  originalRotations = [
+    bonesArray[31].quaternion.clone(),
+    bonesArray[40].quaternion.clone(),
+    bonesArray[30].quaternion.clone(),
+    bonesArray[39].quaternion.clone()
+  ];
+  
+  let time = 0;
+  const duration = 1; // Animation duration in seconds
+  const axis = new THREE.Vector3().subVectors(bonesArray[31].position, bonesArray[40].position).normalize();
+  const speed = 2.10; // Rotation speed in radians per second
+
+  function updateBones() {
+    time += deltaTime;
+
+    const progress = Math.min(time / duration, 1); // Clamp progress to 1 after the duration is reached
+
+    // Update bone rotations based on progress
+    bonesArray[30].rotateX(-speed*deltaTime);
+    bonesArray[39].rotateX(speed*deltaTime);
+
+    if (progress < 1) {
+      // If the animation is not complete, request the next frame
+      requestAnimationFrame(updateBones);
+    }else{
+      if(isSwimming){
+        retractArms()
+        extendArmsToSwim()
+      }else{
+        retractArms();
+      }
+    }
+  }
+  // Start the animation
+  requestAnimationFrame(updateBones);
+  armsExtended = true;
+}
+
+function loopLegsForSwim(){
+  originalRotationsLegs = [
+    bonesArray[10].quaternion.clone(),
+    bonesArray[20].quaternion.clone(),
+    bonesArray[11].quaternion.clone(),
+    bonesArray[21].quaternion.clone()
+  ];
+  
+  let time = 0;
+  const duration = 1; // Animation duration in seconds
+  const axis = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
+  const speed = 1; // Rotation speed in radians per second
+
+  function updateBones() {
+    time += deltaTime;
+
+    const progress = Math.min(time / duration, 1); // Clamp progress to 1 after the duration is reached
+
+    // Update bone rotations based on progress
+    bonesArray[10].rotateOnWorldAxis(axis,  2 * speed * deltaTime);
+    bonesArray[20].rotateOnWorldAxis(axis, - 2 * speed * deltaTime);
+    bonesArray[11].rotateOnWorldAxis(axis, -speed * deltaTime);
+    bonesArray[21].rotateOnWorldAxis(axis, speed * deltaTime);
+
+    if (progress < 1) {
+      // If the animation is not complete, request the next frame
+      requestAnimationFrame(updateBones);
+    }else{
+      if(isSwimming){
+        retractLegs()
+        loopLegsForSwim()
+      }else{
+        retractLegs();
+      }
+    }
+  }
+  requestAnimationFrame(updateBones);
+  legsExtended = true;
 }
 
 // ***************
