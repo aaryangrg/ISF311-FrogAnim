@@ -133,8 +133,21 @@ function handleKeyPress(event) {
     } else if (event.key == "d") {
       frogModel.rotateY(+NINTY_ROTATION);
     } else if (event.key == "w") {
-      animateExtendArms();
-    } else if (event.key === "j") {
+      const shoulderAxis = new THREE.Vector3().subVectors(bonesArray[30].position, bonesArray[39].position).normalize();
+      const axis = new THREE.Vector3().subVectors(bonesArray[31].position, bonesArray[40].position).normalize();
+      bonesArray[31].rotateOnWorldAxis(axis, -1.5);
+      bonesArray[40].rotateOnWorldAxis(axis, 1.5);
+      bonesArray[30].rotateOnAxis(axis, 1.5);
+      bonesArray[39].rotateOnAxis(axis, -1);
+
+    } else if (event.key == "s") {
+      const axisThighs = new THREE.Vector3().subVectors(bonesArray[10].position, bonesArray[20].position).normalize();
+      const axisKnees = new THREE.Vector3().subVectors(bonesArray[12].position, bonesArray[22].position).normalize();
+      bonesArray[10].rotateOnWorldAxis(axisThighs, 2);
+      bonesArray[20].rotateOnWorldAxis(axisThighs, -2);
+      bonesArray[11].rotateOnWorldAxis(axisThighs,-1);
+      bonesArray[21].rotateOnWorldAxis(axisThighs,1);
+      }else if (event.key === "j") {
       // Calculate the forward direction of the frog based on its rotation
       const forward = new THREE.Vector3(0, 0, 1);
       forward.applyQuaternion(frogModel.quaternion);
@@ -272,15 +285,15 @@ function animateExtendArms() {
   forward.applyQuaternion(frogModel.quaternion);
 
   // Extend the arms by rotating the arm bones around the axis perpendicular to the forward direction and the up direction of the arm
-  const extendDuration = 0.2;
-  const extendAngle = Math.PI / 6;
+  const extendDuration = 5;
+  const extendAngle = Math.PI / 2;
   const arms = [bonesArray[30], bonesArray[39]];
   const armAxes = [new THREE.Vector3(), new THREE.Vector3()];
   for (let i = 0; i < 2; i++) {
     const arm = arms[i];
     const up = new THREE.Vector3(0, 1, 0);
     up.applyQuaternion(arm.quaternion);
-    const axis = new THREE.Vector3().crossVectors(forward, up).normalize();
+    const axis = new THREE.Vector3().subVectors(arms[0].position, arms[1].position);
     armAxes[i].copy(axis);
     const startQuaternion = arm.quaternion.clone();
     const endQuaternion = new THREE.Quaternion()
